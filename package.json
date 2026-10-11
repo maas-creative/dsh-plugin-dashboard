@@ -9,7 +9,8 @@
     "start:standalone": "node server.mjs",
     "test:resident": "node --test resident-test.mjs",
     "start:with-scrum": "node resident.mjs",
-    "publication:source": "node scripts/prepare-public-source.mjs"
+    "publication:source": "node scripts/prepare-public-source.mjs",
+    "demo:readme": "node scripts/readme-demo.mjs"
   },
   "engines": {
     "node": ">=24"
@@ -122,7 +123,11 @@
     "vendor/antigravity-source",
     "docs/arc-ui-implementation.md",
     "docs/publication-audit.md",
-    "docs/initial-release-verification.json"
+    "docs/initial-release-verification.json",
+    "docs/assets",
+    "docs/visual-assets.md",
+    "scripts/readme-demo.mjs",
+    "docs/assets-manifest.json"
   ],
   "license": "AGPL-3.0-only",
   "author": "MaaS Creative",

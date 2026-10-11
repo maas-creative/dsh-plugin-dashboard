@@ -1,4 +1,23 @@
+<p align="center">
+  <img src="docs/assets/logo.png" alt="Dashboard logo" width="112" height="112">
+</p>
+
 # Dashboard
+
+プロジェクトの成果物、内部タスク、締切、提出記録を俯瞰し、エージェントの作業と結び付けるローカルアプリケーションです。
+
+![Dashboardの全体の進捗と階層プロジェクト](docs/assets/overview.png)
+
+*公開用サンプルデータで撮影した実画面です。個人の履歴や認証情報は含みません。*
+
+<details>
+<summary>今日のタスクとスマートフォン幅の表示を見る</summary>
+
+![今日のタスク、出力、依存関係、次の行動](docs/assets/today-tasks.png)
+
+<img src="docs/assets/mobile.png" alt="スマートフォン幅での全体の進捗表示" width="300">
+
+</details>
 
 ## Initial release scope
 

@@ -1,0 +1,35 @@
+{
+  "generatedLogos": "built-in imagegen",
+  "screenshots": "Playwright; actual UI with synthetic display data",
+  "assets": [
+    {
+      "file": "logo.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 432213,
+      "sha256": "8d66374ff41b9265e760d1ae01504d71416e7d72f759be135beb6784edd2e72d",
+      "transparentCorner": true
+    },
+    {
+      "file": "mobile.png",
+      "width": 390,
+      "height": 844,
+      "bytes": 69856,
+      "sha256": "21979b0768b8afdb2a06ba091eb5eeeb3c6d7f4ecc74c7b5d9e1f6f7bd5eab58"
+    },
+    {
+      "file": "overview.png",
+      "width": 1440,
+      "height": 1000,
+      "bytes": 156532,
+      "sha256": "6896619600018ed5a4685cb87d3c9400ade8005c7fccd4a32f670b765f5b8c52"
+    },
+    {
+      "file": "today-tasks.png",
+      "width": 1440,
+      "height": 1000,
+      "bytes": 160182,
+      "sha256": "7bc3451e987a74e6caa2abe1b6e85d2f240fbaf4c2f0cec05e3ebcfb1dac1101"
+    }
+  ]
+}
