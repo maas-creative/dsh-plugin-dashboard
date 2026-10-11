@@ -49,7 +49,7 @@
     "./execution": "./coordinator.mjs",
     "./resident": "./resident-plugin.mjs"
   },
-  "description": "Dashboard business ledger and UI for DSH; optional Scrum public execution integration",
+  "description": "Project Dashboard: local project, task and deadline management app with a DSH integration plugin",
   "files": [
     "app.js",
     "marked.umd.js",
@@ -127,7 +127,10 @@
     "docs/assets",
     "docs/visual-assets.md",
     "scripts/readme-demo.mjs",
-    "docs/assets-manifest.json"
+    "docs/assets-manifest.json",
+    "docs/runtime-reference.md",
+    "docs/publication-guide.md",
+    "docs/readme-policy.md"
   ],
   "license": "AGPL-3.0-only",
   "author": "MaaS Creative",
