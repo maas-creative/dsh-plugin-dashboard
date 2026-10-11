@@ -1,0 +1,35 @@
+// Scrum build adapter; the included upstream sources retain their MIT licenses.
+import {mkdtemp,cp,mkdir,writeFile,readFile,symlink} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join,dirname,resolve} from 'node:path';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+const source=dirname(fileURLToPath(import.meta.url));
+const stage=await mkdtemp(join(tmpdir(),'scrum-audio-build-'));
+function run(command,args){const r=spawnSync(command,args,{cwd:stage,stdio:'inherit'});if(r.error)throw r.error;if(r.status!==0)throw new Error(`${command} exited ${r.status}`);}
+await writeFile(join(stage,'package.json'),JSON.stringify({private:true,type:'module',dependencies:{typescript:'6.0.3','@types/bun':'1.3.0','@types/node':'24.10.1',zod:'4.6.5','xdg-basedir':'5.1.0',esbuild:'0.28.2'}}));
+run('npm',['install','--ignore-scripts','--no-audit','--no-fund']);
+await cp(join(source,'core'),join(stage,'core'),{recursive:true});
+await symlink(join(stage,'node_modules'),join(stage,'core/node_modules'));
+run(process.execPath,[join(stage,'node_modules/typescript/bin/tsc'),'-p','core/tsconfig.build.json']);
+const tree=join(stage,'tree');
+const auth='work/dsh-runtime/dsh-antigravity-auth';
+const core='work/dsh-runtime/antigravity-build/node_modules/@cortexkit/antigravity-auth-core';
+await mkdir(join(tree,dirname(auth)),{recursive:true});
+await cp(join(source,'dsh-auth'),join(tree,auth),{recursive:true});
+await mkdir(join(tree,core),{recursive:true});
+await cp(join(stage,'core/dist'),join(tree,core,'dist'),{recursive:true});
+await cp(join(source,'core/package.json'),join(tree,core,'package.json'));
+await mkdir(join(tree,auth,'node_modules/@cortexkit'),{recursive:true});
+await symlink(join(tree,core),join(tree,auth,'node_modules/@cortexkit/antigravity-auth-core'));
+const {build}=await import(pathToFileURL(join(stage,'node_modules/esbuild/lib/main.js')));
+const result=await build({absWorkingDir:tree,entryPoints:[`${auth}/src/index.ts`],bundle:true,platform:'node',format:'esm',target:'node24',external:['@deepseek-ai/*'],write:false});
+const bytes=result.outputFiles[0].contents;
+await writeFile(join(stage,'rebuilt.mjs'),bytes);
+const expected=await readFile(join(source,'../antigravity.mjs'));
+const sha=createHash('sha256').update(bytes).digest('hex');
+if(!Buffer.from(bytes).equals(expected)&&process.argv.includes('--write'))await writeFile(join(source,'../antigravity.mjs'),bytes);
+else if(!Buffer.from(bytes).equals(expected))throw new Error(`Bundle differs: ${sha}; build retained at ${stage}`);
+const output=process.argv.slice(2).find(argument=>argument!=='--write');if(output)await writeFile(resolve(output),bytes,{flag:'wx'});
+console.log(JSON.stringify({exactReproduction:true,sha256:sha,buildDirectory:stage}));

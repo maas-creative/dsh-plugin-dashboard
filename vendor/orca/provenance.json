@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/stablyai/orca",
+  "commit": "444f1952c771e08134d490145ca6c756487ad163",
+  "files": [
+    {
+      "source": "src/main/runtime/orchestration/db/attempt-outcome-projection.ts",
+      "file": "attempt-outcome-projection.ts",
+      "sha256": "80972891301e10a79f92f63cf17450bab03760f80a90d6a5c7a497414df3049a",
+      "modified": false
+    },
+    {
+      "source": "src/main/runtime/orchestration/db/attempt-observation-types.ts",
+      "file": "attempt-observation-types.ts",
+      "sha256": "b36712d37a2dd6722ba21364987e2c1e1b018217f747b9559ced9a642c483b55",
+      "modified": false
+    }
+  ]
+}

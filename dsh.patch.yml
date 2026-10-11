@@ -1,0 +1,69 @@
+- id: sdk-jsonrpc-server
+  disabled: true
+- id: llm-pi-ai
+  config:
+    providers:
+      openai-codex:
+        reasoning: low
+        models:
+          - id: gpt-6.1-sol
+            input: [text, image]
+            contextWindow: 1048576
+            maxTokens: 32768
+            reasoningEfforts:
+              low: low
+- id: session-persistence-jsonl
+  config:
+    root: !!js dshHomePath('sessions')
+    compression: none
+- id: system-prompt
+  config:
+    includeRuntimeContext: true
+    personaPrefix: !!js "process.env.DSH_SYSTEM_PROMPT || 'You are a project work agent. Complete the requested task and verify its artifact. Never delegate unless explicitly requested.'"
+    personaSuffix: ''
+- id: sandbox-policy
+  config:
+    mode: !!js "process.env.DSH_PLANNER === '1' || ['researcher','reviewer','explore','librarian','plan-consultant','plan-reviewer','architect'].includes(process.env.DSH_ROLE) ? 'read-only' : 'workspace-write'"
+    workspaceRoot: !!js process.env.DSH_WORK_CWD
+- id: approval
+  config:
+    policy: never
+- id: permission
+  disabled: true
+- id: tools
+  config:
+    mode: native
+- id: skill-filesystem
+  config:
+    includeDefaultRoots: true
+    customSkillDirs: !!js "[process.getBuiltinModule('node:path').join(process.getBuiltinModule('node:os').homedir(), '.codex/skills')].filter(Boolean)"
+- id: agent-instructions
+  disabled: false
+- id: tool-web
+  disabled: true
+- insert:
+    - id: omd-usage
+      name: ./vendor/oh-my-dsh/usage.mjs
+    - id: omd-editor
+      name: ./vendor/oh-my-dsh/editor.mjs
+      disabled: true
+    - id: omdsh-skills
+      name: ./vendor/oh-my-deepseek-harness/index.mjs
+    - id: dashboard-bridge
+      name: ./dsh-bridge.mjs
+
+- insert:
+    - id: antigravity-auth
+      name: ./vendor/antigravity.mjs
+
+- insert:
+    - id: dashboard-tool-ask-user
+      name: '@deepseek-ai/dsh-tool-ask-user'
+
+- insert:
+    - id: dashboard
+      name: ./dashboard-plugin.mjs
+      disabled: !!js "!process.env.DSH_DASHBOARD_LEDGER"
+      config:
+        ledgerPath: !!js process.env.DSH_DASHBOARD_LEDGER
+        projectIds: !!js JSON.parse(process.env.DSH_DASHBOARD_SCOPE || '[]')

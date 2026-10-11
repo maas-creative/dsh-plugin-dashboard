@@ -1,0 +1,16 @@
+{
+  "source": "https://github.com/kvidzibo/pi-web-access",
+  "version": "0.1.1",
+  "originalBundleSha256": "0164eb5e7a662648e34eeb848b900f16d1672a68c33be743ae2eda5f1b9c1026",
+  "adaptation": "Own compatibility policy: redirect limit 10, attribution header and public test export; no other compiled implementation changes.",
+  "license": "MIT",
+  "licenseSha256": "d2ee025f63ff73b1f91d5472dfd7b81cb425e1f7cc8e1b1fff97e436c01a9846",
+  "currentRuntimeSha256": "32bd130add9bdaacf2e2c41b69062a7b813835c194a8e5c8046c49812f15c45a",
+  "exactSourceRebuildVerified": true,
+  "buildProof": "work/independent-vendor-rebuild/web-proof.json",
+  "adaptations": [
+    "Attribution header",
+    "Redirect maximum constant from 5 to 10",
+    "Export already compiled fetchRemoteUrl for regression inspection"
+  ]
+}

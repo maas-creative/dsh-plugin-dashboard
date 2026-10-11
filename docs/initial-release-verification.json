@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "regression": {
+    "passed": 95,
+    "failed": 0,
+    "skipped": 0
+  },
+  "dashboardScrumIntegrationAndResidentRestart": {
+    "passed": 7,
+    "failed": 0
+  },
+  "testedPlatform": "macOS arm64, Node 24.19.0, DSH 0.2.0-rc.2",
+  "notVerified": [
+    "24-hour soak",
+    "sustained high load",
+    "native behavior on every operating system"
+  ],
+  "sensitiveDataScan": "no unclassified findings",
+  "sourceProvenance": "engineering review and source/license classifications; not formal clean-room claim",
+  "dependencyAudit": {
+    "totalVulnerabilities": 0
+  },
+  "securityUpdates": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "fflate": "0.8.3",
+    "credentialIssuerBound": true
+  },
+  "antigravityClientConfig": "User-supplied environment configuration; no bundled OAuth application credentials"
+}

@@ -1,0 +1,170 @@
+{
+  "compiler": "typescript@6.0.3",
+  "sourceCommit": "351c2bf09f007792e7bc183ba73d11e2c57146fe",
+  "files": [
+    {
+      "path": "atomic-write.js",
+      "match": true,
+      "npmSha256": "6ff0c7d69d973a10c4be5552dc68425dddcf8a0a7c9062bc38741cc5dac22abe",
+      "sourceBuildSha256": "6ff0c7d69d973a10c4be5552dc68425dddcf8a0a7c9062bc38741cc5dac22abe"
+    },
+    {
+      "path": "file-lock.js",
+      "match": true,
+      "npmSha256": "b6dbc0e2de9db485141925460d50bff3ccdd297eccfd12c7c1105a54d73e2e23",
+      "sourceBuildSha256": "b6dbc0e2de9db485141925460d50bff3ccdd297eccfd12c7c1105a54d73e2e23"
+    },
+    {
+      "path": "logger.js",
+      "match": true,
+      "npmSha256": "207e7dcbbd54f18372735322154d5f2c8d2acfa78dc811bae29747899c3cb3d3",
+      "sourceBuildSha256": "207e7dcbbd54f18372735322154d5f2c8d2acfa78dc811bae29747899c3cb3d3"
+    },
+    {
+      "path": "account-storage.js",
+      "match": true,
+      "npmSha256": "5346976e87486ca3496881d5f9e16cc71039a205c39aea39228965fc2dc767c1",
+      "sourceBuildSha256": "5346976e87486ca3496881d5f9e16cc71039a205c39aea39228965fc2dc767c1"
+    },
+    {
+      "path": "auth.js",
+      "match": true,
+      "npmSha256": "f8b8566330251fe78f20600d2a5b1b0a17dc2f993d5288ef7bc2e128b24af4d1",
+      "sourceBuildSha256": "f8b8566330251fe78f20600d2a5b1b0a17dc2f993d5288ef7bc2e128b24af4d1"
+    },
+    {
+      "path": "fingerprint.js",
+      "match": true,
+      "npmSha256": "e3ac990242dce05fbe463feae1b3276521c7a5fea8d0d7642ba754e0dba7467d",
+      "sourceBuildSha256": "e3ac990242dce05fbe463feae1b3276521c7a5fea8d0d7642ba754e0dba7467d"
+    },
+    {
+      "path": "model-registry.js",
+      "match": true,
+      "npmSha256": "03dcf73e543dc3db3f806e3035340d5725f77b7a39856f08764ba5e85e89c9e7",
+      "sourceBuildSha256": "03dcf73e543dc3db3f806e3035340d5725f77b7a39856f08764ba5e85e89c9e7"
+    },
+    {
+      "path": "quota-types.js",
+      "match": true,
+      "npmSha256": "1f073caf05aa955576264b7da33490c3b4f56f0a7a05d7f66a822158e5469b1f",
+      "sourceBuildSha256": "1f073caf05aa955576264b7da33490c3b4f56f0a7a05d7f66a822158e5469b1f"
+    },
+    {
+      "path": "rotation.js",
+      "match": true,
+      "npmSha256": "edc89893a9cef4616069512965edc36a1460f86afcd32f2284bedf083919c845",
+      "sourceBuildSha256": "edc89893a9cef4616069512965edc36a1460f86afcd32f2284bedf083919c845"
+    },
+    {
+      "path": "account-manager.js",
+      "match": true,
+      "npmSha256": "37587974da288f8336a9057cb986056e725d5e978de01b9445dd56bc9b298c9e",
+      "sourceBuildSha256": "37587974da288f8336a9057cb986056e725d5e978de01b9445dd56bc9b298c9e"
+    },
+    {
+      "path": "account-types.js",
+      "match": true,
+      "npmSha256": "619a0e2e48bdb81a61308d5ad39f60ed8010584d6849503c9138d4a3bcdfc667",
+      "sourceBuildSha256": "619a0e2e48bdb81a61308d5ad39f60ed8010584d6849503c9138d4a3bcdfc667"
+    },
+    {
+      "path": "agy-request-metadata.js",
+      "match": true,
+      "npmSha256": "0d3a181c191ceb448142dad9f97441b7fdc9cabaa7974cad2abc88c0892680ec",
+      "sourceBuildSha256": "0d3a181c191ceb448142dad9f97441b7fdc9cabaa7974cad2abc88c0892680ec"
+    },
+    {
+      "path": "agy-transport.js",
+      "match": true,
+      "npmSha256": "7267ccffb928070e560ae9872e51ee88bd774b7278fe181ba48e66ca46a7aecd",
+      "sourceBuildSha256": "7267ccffb928070e560ae9872e51ee88bd774b7278fe181ba48e66ca46a7aecd"
+    },
+    {
+      "path": "constants.js",
+      "match": true,
+      "npmSha256": "df591c62829212b974ff8053602bb625ec17534ddf0dba7b9488d04a5a7545dd",
+      "sourceBuildSha256": "df591c62829212b974ff8053602bb625ec17534ddf0dba7b9488d04a5a7545dd"
+    },
+    {
+      "path": "fetch-timeout.js",
+      "match": true,
+      "npmSha256": "88c1200da73ade5c8d8e339049358c918042ca3dd77d9626719410073202c8e0",
+      "sourceBuildSha256": "88c1200da73ade5c8d8e339049358c918042ca3dd77d9626719410073202c8e0"
+    },
+    {
+      "path": "antigravity/oauth.js",
+      "match": true,
+      "npmSha256": "2099d73fb6c527ff52e404fbf0596b8e966c2cf63d54873dfba477330c2f0587",
+      "sourceBuildSha256": "2099d73fb6c527ff52e404fbf0596b8e966c2cf63d54873dfba477330c2f0587"
+    },
+    {
+      "path": "auth-types.js",
+      "match": true,
+      "npmSha256": "8edb313d22e353ac47e373574ad5c809221cc3a44723b4157aa5a8fa7284df80",
+      "sourceBuildSha256": "8edb313d22e353ac47e373574ad5c809221cc3a44723b4157aa5a8fa7284df80"
+    },
+    {
+      "path": "model-types.js",
+      "match": true,
+      "npmSha256": "8239c97c4262c12201ec381ab2256c5cd5b372f56327408916107b40fec07a67",
+      "sourceBuildSha256": "8239c97c4262c12201ec381ab2256c5cd5b372f56327408916107b40fec07a67"
+    },
+    {
+      "path": "project.js",
+      "match": true,
+      "npmSha256": "4d24b974ac205b74e151fa6e9f13c3043d2c65a5883108dcced88b760fdcef9e",
+      "sourceBuildSha256": "4d24b974ac205b74e151fa6e9f13c3043d2c65a5883108dcced88b760fdcef9e"
+    },
+    {
+      "path": "quota-manager.js",
+      "match": true,
+      "npmSha256": "25c1a7fd5b6031cec4e0df91bb789e93a25aa92cc195f775fc71486ecd637f58",
+      "sourceBuildSha256": "25c1a7fd5b6031cec4e0df91bb789e93a25aa92cc195f775fc71486ecd637f58"
+    },
+    {
+      "path": "transform/claude.js",
+      "match": true,
+      "npmSha256": "6c6818d0fcb904b944162111fa05acf2e41779e35cdf1ee955da4d20ee65842f",
+      "sourceBuildSha256": "6c6818d0fcb904b944162111fa05acf2e41779e35cdf1ee955da4d20ee65842f"
+    },
+    {
+      "path": "transform/gemini.js",
+      "match": true,
+      "npmSha256": "09bfbf3713f3dde933bad507a7ed38e3c10ba53063e84486c4ce749fdcac7727",
+      "sourceBuildSha256": "09bfbf3713f3dde933bad507a7ed38e3c10ba53063e84486c4ce749fdcac7727"
+    },
+    {
+      "path": "transform/cross-model-sanitizer.js",
+      "match": true,
+      "npmSha256": "c351068229743f5e6d50b79627571d6c79f11dbf31ea79e8060ff087536e5c61",
+      "sourceBuildSha256": "c351068229743f5e6d50b79627571d6c79f11dbf31ea79e8060ff087536e5c61"
+    },
+    {
+      "path": "transform/model-resolver.js",
+      "match": true,
+      "npmSha256": "5af0624c9082797c8f60724e9f7eefed34daef1db00e9aa4bfb0c4177ebf76dd",
+      "sourceBuildSha256": "5af0624c9082797c8f60724e9f7eefed34daef1db00e9aa4bfb0c4177ebf76dd"
+    },
+    {
+      "path": "transform/index.js",
+      "match": true,
+      "npmSha256": "42974d08eaa897c24912d43d3a08e37a759819be0bb4ba0132cdd06705cdd8cd",
+      "sourceBuildSha256": "42974d08eaa897c24912d43d3a08e37a759819be0bb4ba0132cdd06705cdd8cd"
+    },
+    {
+      "path": "version.js",
+      "match": true,
+      "npmSha256": "00daeb5a003642299179c9ec8dab8d9d0ee6cba7dfbaeffadaa0e4765b6c1694",
+      "sourceBuildSha256": "00daeb5a003642299179c9ec8dab8d9d0ee6cba7dfbaeffadaa0e4765b6c1694"
+    },
+    {
+      "path": "index.js",
+      "match": true,
+      "npmSha256": "917a30cbb4d8a1ffd7ab27e6cb1d30719b9a35c81f0b33aae2e2e191f4fe1bb6",
+      "sourceBuildSha256": "917a30cbb4d8a1ffd7ab27e6cb1d30719b9a35c81f0b33aae2e2e191f4fe1bb6"
+    }
+  ],
+  "exactMatch": true,
+  "scope": "Historical upstream baseline before the MaaS Creative environment-credential adaptation. Current reproducibility is recorded in public-client-config-build.json."
+}

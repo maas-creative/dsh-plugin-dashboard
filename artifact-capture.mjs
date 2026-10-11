@@ -1,0 +1,6 @@
+import {realpath,open,stat,mkdir,writeFile} from 'node:fs/promises';
+import {join,sep} from 'node:path';
+import {createHash} from 'node:crypto';
+import {fail} from './store.mjs';
+const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
+export async function captureArtifact(path,base,dataDir){const canonical=await realpath(path);if(!canonical.startsWith(base+sep))fail('成果物はプロジェクト内を指定してください');const f=await open(canonical,'r');try{const before=await f.stat();if(!before.isFile()||before.size>100*1024*1024)fail('100MB以下のファイルを指定してください');const parts=[];let size=0;for await(const part of f.createReadStream({autoClose:false})){size+=part.length;if(size>100*1024*1024)fail('100MBを超えています');parts.push(part)}const after=await f.stat();if(before.size!==after.size||before.mtimeMs!==after.mtimeMs||before.ctimeMs!==after.ctimeMs)fail('読取中にファイルが変更されました');const current=await stat(canonical);if(current.ino!==before.ino||current.dev!==before.dev||await realpath(path)!==canonical)fail('読取中にファイルが変更されました');const bytes=Buffer.concat(parts),hash=digest(bytes);const dir=join(dataDir,'artifacts');await mkdir(dir,{recursive:true,mode:0o700});try{await writeFile(join(dir,hash),bytes,{flag:'wx',mode:0o600})}catch(e){if(e.code!=='EEXIST')throw e}return {path:canonical,hash}}finally{await f.close()}}

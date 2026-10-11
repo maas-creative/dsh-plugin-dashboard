@@ -1,0 +1,3 @@
+From the Dashboard root run `node vendor/antigravity-source/rebuild.mjs`. Node 24 is required. The recipe installs pinned build-only dependencies into a new temporary directory with lifecycle scripts disabled, compiles the included MIT core source and bundles the included MIT DSH auth source. It compares the bytes with vendor/antigravity.mjs and fails if they differ. This does not change the installed runtime.
+
+MaaS Creative adaptation: OAuth client credentials are supplied by environment variables. `--write` explicitly updates the runtime bundle from the included source; without it, the recipe only verifies byte identity.

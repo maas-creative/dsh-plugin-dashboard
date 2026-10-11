@@ -1,0 +1,18 @@
+[
+  {
+    "path": "BUILD.md",
+    "sha256": "c5580a88cd161c977c3bf5eb5e951544fec343b5654df4a30cd5311383478cc2"
+  },
+  {
+    "path": "LICENSE",
+    "sha256": "c916444d5de0906391c68d02d8a23a071f561384405ddcacf8499ae014da03e3"
+  },
+  {
+    "path": "rebuild.mjs",
+    "sha256": "a8375c910011e40c20f72e9e4dfa295f559612607eb76122338bd1d72d66baec"
+  },
+  {
+    "path": "worktree.ts",
+    "sha256": "c620877929b0214e7fb369b67e15e04ad2fb8886aba045ab7dbedddcf4c60a8c"
+  }
+]

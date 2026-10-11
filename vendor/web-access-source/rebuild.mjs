@@ -1,0 +1,20 @@
+// Own source-build adapter; included upstream source remains MIT licensed.
+import {build} from 'esbuild';
+import {mkdtemp,cp,mkdir,readFile,writeFile} from 'node:fs/promises';
+import {join,dirname} from 'node:path';
+import {tmpdir} from 'node:os';
+import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+const source=dirname(fileURLToPath(import.meta.url));
+const stage=await mkdtemp(join(tmpdir(),'scrum-web-source-'));
+const tree='outputs/dashboard-app/node_modules/@kvidzibo/pi-web-access';
+await mkdir(join(stage,tree),{recursive:true});
+await cp(join(source,'src'),join(stage,tree,'src'),{recursive:true});
+await cp(join(source,'package.json'),join(stage,tree,'package.json'));
+const r=await build({absWorkingDir:stage,entryPoints:[`${tree}/src/tools.ts`],bundle:true,platform:'node',format:'esm',target:'node24',packages:'external',write:false});
+let text=r.outputFiles[0].text;
+text='// Adapted web execution belongs to Scrum; see pi-web-access-provenance.json.\n'+text.replace('var MAX_REDIRECTS = 5;', 'var MAX_REDIRECTS = 10;').replace('webAccess as default\n','webAccess as default, fetchRemoteUrl\n');
+const expected=await readFile(join(source,'../pi-web-access.mjs'),'utf8');
+await writeFile(join(stage,'rebuilt.mjs'),text);
+if(text!==expected)throw new Error(`Rebuild differs; retained at ${stage}`);
+console.log(JSON.stringify({exactReproduction:true,sha256:createHash('sha256').update(text).digest('hex')}));

@@ -1,0 +1,6 @@
+{
+  "adaptation": "Environment-supplied OAuth client credentials; missing config rejects before refresh HTTP; no bundled client values",
+  "runtimeSha256": "9e805753283f4ec47eddb64c3e5af5c06fa12d539c1fb66b2a2c296c3c871059",
+  "preferredSource": "core and dsh-auth",
+  "recipe": "node vendor/antigravity-source/rebuild.mjs"
+}
