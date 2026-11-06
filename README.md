@@ -12,6 +12,10 @@
 
 [リリース](https://github.com/maas-creative/dsh-plugin-dashboard/releases) · [接続・実行の仕様](docs/runtime-reference.md) · [不具合報告](https://github.com/maas-creative/dsh-plugin-dashboard/issues)
 
+## 最新のScrum連携
+
+Dashboardは設定・観測と業務台帳を担当し、Workerの実行とコンテキスト圧縮はScrumが担当します。メインの常駐セッションはEoCC、メイン以外のWorker・スケジュール・レビュー・検証セッションはSACを既定にしています。Dashboardでは接続状態、実行状態、成果物、キャッシュ／圧縮の観測結果を確認できますが、実行エンジン自体は持ちません。
+
 ![Project Dashboardの全体の進捗と階層プロジェクト](docs/assets/overview.png)
 
 *サンプルデータを使った実画面です。*
@@ -90,6 +94,8 @@ PORT=4318 npm run start:with-scrum
 
 HardTackleの入口は `hdt` または `/hdt` です。実行の終了だけで業務タスクを完了にはせず、成果物とタスクの状態を確認します。DSHプラグインの読取範囲、ホストへの組み込み、追加のOAuth設定は[リファレンス](docs/runtime-reference.md)を参照してください。
 
+圧縮条件を個別に設定する場合は、起動環境の `DSH_COMPACTION_MODEL_POLICIES` にDSHの `modelPolicies` 形式のJSON配列を指定します。各項目の `provider` と `model` が両方一致した場合だけ適用されます。未指定時は従来の共通設定が使われます。数値は対象環境での測定を基に決めてください。
+
 ## 開発
 
 ```sh
@@ -101,8 +107,18 @@ npm pack --dry-run
 
 `test:resident` はScrumとの併用・再起動の試験です。先にScrum側でも `npm ci` を実行し、実在するフォルダを指定してください。
 
-スクリーンショット用のサンプル画面は `npm run demo:readme` で起動できます。[画像の制作・撮影方法](docs/visual-assets.md)と[公開ソースの準備](docs/publication-guide.md)も参照してください。
+スクリーンショット用のサンプル画面は `npm run demo:readme` で起動できます。[画像の制作・公開ソースの準備](docs/publication-guide.md)も参照してください。
 
 ## ライセンス
 
 MaaS Creativeのオリジナルソースは **AGPL-3.0-only** です。第三者のコードには各ライセンスが適用されます。[LICENSE](LICENSE)、[NOTICE](NOTICE)、[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を参照してください。
+
+### 外出先のスマホから接続（Tailscale）
+
+作業用マシンの設定画面「スマホから接続」で「外部配信をオン」を押すと、Tailscale Serveをダッシュボードへ自動接続します。作業用マシンとスマホにはTailscaleを導入し、同じアカウントで接続してください。未導入・未ログイン時は設定画面に案内が表示されます。「Tailscaleを設定」でアプリまたは公式ダウンロードを開き、認証後に「接続を再試行」を押してください。
+
+接続済みになるとHTTPSのスマホ用URLが表示されます。「接続コードを発行」で一回限りのコードを取得してください。外部配信のオフはダッシュボードのServe設定だけを解除します。Macやダッシュボードの再起動後は、保存したオン設定で再接続します。他サービスの443番ポートや公開Funnel設定がある場合は上書きせず、設定画面にエラーを表示します。Tailscale内の到達許可に加え、ダッシュボードのスマホ認証と管理権限制限が必要です。
+
+### 完了作業のアーカイブ
+
+確認済みの完了作業はアーカイブされ、プロジェクト画面の「完了作業のアーカイブ」から確認・解除できます。アーカイブした時刻から30日後に手動削除できます。未完了の作業、子作業や前提・実行記録から参照される作業は削除を拒否します。削除するのは台帳の作業とその関連付けで、成果物ファイルやセッション本体は削除しません。

@@ -1,0 +1,37 @@
+{
+  "source": "https://uiarc.dev/r/chat-thread.json",
+  "retrieved": "2026-10-12T02:23:39.521Z",
+  "license": "MIT",
+  "changes": [
+    "relative motion-token imports for installed layout",
+    "ChatComposer defaultText and onTextChange for retained drafts",
+    "hide reaction control when reactions are disabled"
+  ],
+  "files": [
+    {
+      "path": "registry/components/chat-thread/chat-thread.tsx",
+      "upstreamSha256": "dcef29b62c7e70cbc56a8a3de49e36a62285af8d72ebdaaa9d7a99461505bec9",
+      "installedSha256": "2464da51a2af6cc3c97648bda993ca42a1b39b8251cd28dd0acd0113a411651d"
+    },
+    {
+      "path": "registry/components/chat-thread/chat-thread.module.css",
+      "upstreamSha256": "31ea2e7d3e7593c5d191579e005fb1aa05bc92b541f8743eed2183171ef5a7e7",
+      "installedSha256": "31ea2e7d3e7593c5d191579e005fb1aa05bc92b541f8743eed2183171ef5a7e7"
+    },
+    {
+      "path": "registry/motion-tokens.ts",
+      "upstreamSha256": "13af43b57ed38e5b72cfc06ff0ccc39b0593721f04840e73532893593cc61491",
+      "installedSha256": "13af43b57ed38e5b72cfc06ff0ccc39b0593721f04840e73532893593cc61491"
+    },
+    {
+      "path": "lib/motion-tokens.ts",
+      "upstreamSha256": "bec65d2e1b180dd3c574edc60cf84e0fa336e7ff8640eba0c70bcf0ae765fb8a",
+      "installedSha256": "839abae0d0767d20dad2535911fb55e9aa930d00ea0154ae6210393da641f201"
+    },
+    {
+      "path": "registry/foundation.css",
+      "upstreamSha256": "8949392c308d9f6b617c9f4dba909fb7bd61a762c17b0d1fc9f0832b7b960014",
+      "installedSha256": "8949392c308d9f6b617c9f4dba909fb7bd61a762c17b0d1fc9f0832b7b960014"
+    }
+  ]
+}

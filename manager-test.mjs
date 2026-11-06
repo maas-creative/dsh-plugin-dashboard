@@ -6,9 +6,15 @@ import {tmpdir} from 'node:os';
 import {organizeProject} from './organize.mjs';
 import {Store} from './store.mjs';
 import {saveRun} from './connectors.mjs';
-import {Manager,applyItem,dismissItem,validateItem,addPlan,sourceDocument} from './manager.mjs';
+import {initManager,managerSnapshot,Manager,applyItem,dismissItem,validateItem,addPlan,sourceDocument} from './manager.mjs';
 const dir=await mkdtemp(join(tmpdir(),'manager-test-'));
 try{
+await test('通常表示は候補60件に限定し、古い候補は検索でき、登録済み根拠を失わない',()=>{
+ const s=new Store(join(dir,'bounded.sqlite'));try{initManager(s);for(let n=0;n<120;n++)s.run('INSERT INTO manager_items(id,projectId,sourceId,sourceHash,kind,title,body,state,entityId,created) VALUES(?,?,?,?,?,?,?,?,?,?)','candidate:'+n,n===0?'old-project':'new-project','source','hash','task',n===0?'Old%_Needle':'候補'+n,JSON.stringify({at:n,quote:'原文引用'}),'pending',null,n);
+ s.run('INSERT INTO manager_items(id,projectId,sourceId,sourceHash,kind,title,body,state,entityId,created) VALUES(?,?,?,?,?,?,?,?,?,?)','registered','old-project','source','hash','task','登録済み根拠',JSON.stringify({at:0,quote:'登録の原文'}),'organized','task-id',0);
+ const summary=managerSnapshot(s);assert.equal(summary.pendingCount,120);assert.equal(summary.items.filter(i=>i.state==='pending').length,60);assert.ok(summary.items.find(i=>i.entityId==='task-id'));assert.ok(!summary.items.some(i=>i.id==='candidate:0'));const search=managerSnapshot(s,{query:'old%_needle',projectId:'old-project'});assert.equal(search.pendingMatched,1);assert.equal(search.items[0].id,'candidate:0');assert.equal(search.items[0].body.quote,'原文引用');assert.equal(managerSnapshot(s,{query:'Old%_Needle',projectId:'new-project'}).pendingMatched,0);assert.equal(s.get('SELECT count(*) count FROM manager_items').count,121);
+ }finally{s.close()}
+});
 await test('根拠付きの階層登録・重複防止・人の編集保持・候補締切・棄却・通知への接続',async()=>{
  const s=new Store(join(dir,'ledger.sqlite'));const projectId=s.project({name:'研究',cwd:dir});const path=join(dir,'session.jsonl');const quote='研究論文の分析を続けるために元データを集計してください。';const deadline='2030年10月1日の17時が本稿の正式な締切だと記憶しています。';
  const entries=[{type:'session',id:'s',cwd:dir,timestamp:new Date().toISOString()},...[[deadline,'m2'],[quote,'m1']].map(([text,id])=>({type:'message',id,parentId:id==='m1'?'m2':null,timestamp:new Date().toISOString(),message:{role:'user',content:[{type:'text',text}]}}))];await writeFile(path,entries.map(JSON.stringify).join('\n')+'\n');saveRun(s,{id:'pi:s',source:'Pi',threadId:'s',title:'研究計画',cwd:dir,projectId,path,status:'history',observed:Date.now(),checked:Date.now(),detail:''});

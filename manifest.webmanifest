@@ -1,1 +1,17 @@
-{"name":"Project Dashboard","short_name":"Projects","start_url":"/","display":"standalone","background_color":"#f6f7f3","theme_color":"#182821","lang":"ja"}
+{
+  "name": "Project Dashboard",
+  "short_name": "Projects",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#354bbb",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

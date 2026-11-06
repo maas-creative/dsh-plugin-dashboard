@@ -10,12 +10,13 @@ const packed=JSON.parse(execFileSync('npm',['pack','--dry-run','--json'],{cwd:ro
 const names=new Set(packed.files.map(file=>file.path));
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 for(const [key,command] of Object.entries(pkg.scripts))if(key==='test'||key.startsWith('test:'))for(const name of command.match(/[\w-]+\.mjs/g)||[])names.add(name);
-for(const name of ['package-lock.json','.gitignore','scripts/prepare-public-source.mjs','docs/publication-audit.md','scripts/record-integrity.mjs','test-fixtures/browser-fixture.mjs','mcp-oauth-issuer-test.mjs','resident-test.mjs'])names.add(name);
+for(const name of ['package-lock.json','.gitignore','scripts/prepare-public-source.mjs','docs/runtime-reference.md','scripts/record-integrity.mjs','test-fixtures/browser-fixture.mjs','mcp-oauth-issuer-test.mjs','resident-test.mjs'])names.add(name);
 await mkdir(out,{recursive:true});
 const manifest=[];
 for(const name of [...names].sort()){
  if(/(^|\/)(work|node_modules|\.scrum|\.development|\.git|reports|outputs|cache)(\/|$)|\.(sqlite|db|tgz|log)(-|\.|$)|^scripts\/port-/.test(name))throw Error('Private path selected: '+name);
  const src=join(root,name),dst=join(out,name);if(relative(root,src).startsWith('..'))throw Error('Unsafe source path');
+ try{await stat(src)}catch(error){if(error.code==='ENOENT')continue;throw error}
  await mkdir(resolve(dst,'..'),{recursive:true});await cp(src,dst,{dereference:false});
  manifest.push({path:name,sha256:createHash('sha256').update(await readFile(src)).digest('hex')});
 }

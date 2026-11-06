@@ -12,7 +12,7 @@ export function dashboardRead(store,args={},scope=[]){
  if(args.projectId&&!ids.has(args.projectId))fail('Project is outside this session scope',403);
  const projects=snap.projects.filter(p=>ids.has(p.id)&&(!args.projectId||p.id===args.projectId));
  const selected=new Set(projects.map(p=>p.id));
- const tasks=snap.tasks.filter(t=>selected.has(t.projectId)).map(t=>({...t,actionDue:t.due||null,priorityReason:'',parentId:snap.tasks.some(x=>x.id===t.parentId&&selected.has(x.projectId))?t.parentId:null,dependencies:t.dependencies.filter(id=>snap.tasks.some(x=>x.id===id&&selected.has(x.projectId)))}));
+ const tasks=snap.tasks.filter(t=>!t.trashAt&&selected.has(t.projectId)).map(t=>({...t,actionDue:t.due||null,priorityReason:'',parentId:snap.tasks.some(x=>x.id===t.parentId&&selected.has(x.projectId))?t.parentId:null,dependencies:t.dependencies.filter(id=>snap.tasks.some(x=>x.id===id&&selected.has(x.projectId)))}));
  const deadlines=snap.deadlines.filter(d=>selected.has(d.projectId));
  const submissions=snap.submissions.filter(s=>deadlines.some(d=>d.id===s.deadlineId));
  const artifacts=snap.deliverables.filter(a=>selected.has(a.projectId));

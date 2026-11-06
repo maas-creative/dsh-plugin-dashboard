@@ -5,8 +5,8 @@ export function promptSource({planner,origin},sessionId){
  return {kind:'agent-message',form:'relay',senderSessionId:sessionId};
 }
 export function lowModel(selected={}){
- if(selected.reasoningEffort!==undefined&&selected.reasoningEffort!=='low')throw Error('Dashboard requires low reasoning effort');
+ if(selected.reasoningEffort!==undefined&&(typeof selected.reasoningEffort!=='string'||!selected.reasoningEffort.trim()||selected.reasoningEffort.length>64))throw Error('Invalid reasoning effort');
  if(selected.provider!==undefined&&(typeof selected.provider!=='string'||!selected.provider.trim()))throw Error('Invalid provider');
  if(selected.model!==undefined&&(typeof selected.model!=='string'||!selected.model.trim()))throw Error('Invalid model');
- return {provider:'openai-codex',model:'gpt-6.1-sol',...selected,reasoningEffort:'low'};
+ return {provider:'openai-codex',model:'gpt-6.1-sol',...selected,reasoningEffort:selected.reasoningEffort??'low'};
 }

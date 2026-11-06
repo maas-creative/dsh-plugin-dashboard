@@ -1,6 +1,7 @@
 import {registerQuestionBridge} from './question-bridge.mjs';
 import {requestErrorDetails} from './request-error.mjs';
 import {promptSource,lowModel} from './prompt-origin.mjs';
+import {sessionEvents,lastCallUsage,conversationEvents} from './dsh-history.mjs';
 import {assembleContextFor} from '@deepseek-ai/dsh-agent';
 // Project Dashboard's stdio adapter over public DSH services. Pi logs remain intact.
 import {createInterface} from 'node:readline';
@@ -33,7 +34,7 @@ export function apply(ctx){
   if(handle)return handle.agent;if(creating)return creating;
   creating=(async()=>{
    const selected=JSON.parse(process.env.DSH_MODEL||'{}');const agentOptions=lowModel(selected);
-   const setup=async scoped=>{if(policy.allow)scoped.tools.restrict({allow:[...policy.allow,'dashboard_read']});else if(policy.deny)scoped.tools.restrict({deny:policy.deny});};
+   const setup=async scoped=>{if(policy.allow)scoped.tools.restrict({allow:[...policy.allow,'dashboard_read','dashboard_graph','dashboard_sources']});else if(policy.deny)scoped.tools.restrict({deny:policy.deny});};
    const existing=await ctx.sessionPersistence.stat(sid);
    handle=existing?await ctx.agents.resume({resumeSessionId:sid,agentOptions,setup}):await ctx.agents.create({sessionId:sid,meta:{cwd},agentOptions,setup});
    if(handle.agent.session.header.cwd!==cwd)throw Error('DSHの保存履歴と実行フォルダが異なります');
@@ -64,11 +65,11 @@ export function apply(ctx){
    switch(q.type){
     case 'get_state':data={sessionId:sid,sessionFile:path,model:{provider:a.options.provider,id:a.options.model,reasoningEffort:a.options.reasoningEffort},isStreaming:a.status==='running',engine:'DSH'};break;
     case 'get_commands':data={commands:(await ctx.skills.list({cwd,scope:a})).map(s=>({...s,source:'skill'}))};break;
-    case 'get_messages':data={messages:[...legacy(),...a.session.deriveMessages().filter(m=>m.role==='assistant'||m.role==='user'&&visibleUserMessage(m))]};break;
-    case 'get_session_stats':data={contextUsage:null};break;
+    case 'get_messages':{const events=await sessionEvents(ctx,a.session);data={messages:[...legacy(),...conversationEvents(events,visibleUserMessage)]};break;}
+    case 'get_session_stats':{const meter=ctx.get('tokenMeter');let contextUsage=null;try{const measurement=meter?.measure(a.session);if(measurement)contextUsage={tokens:measurement.totalTokens,basis:measurement.baseline?.kind||'unknown'}}catch{}let contextWindow=null;try{const info=await ctx.llm.resolveModelInfo(a.options.provider,a.options.model);if(Number.isSafeInteger(info.context?.contextWindow)&&info.context.contextWindow>0)contextWindow=info.context.contextWindow}catch{}const events=await sessionEvents(ctx,a.session);data={contextUsage,contextWindow,lastCall:lastCallUsage(events)};break;}
     case 'compact':{const result=await ctx.commands.execute(a,'/compact',[],new AbortController().signal);if(!result||result.result?.kind==='error')throw Error(result?.result?.text||'DSHの要約機能が利用できません');data=result;break;}
     case 'dsh_tool':{const t=ctx.tools.schemas(a).find(t=>t.name===q.name);if(!t)throw Error('利用できないツールです');data=await ctx.tools.execute({callId:randomUUID(),name:q.name,arguments:q.args||{},agent:a,signal:new AbortController().signal});break;}
-    case 'dsh_models':{data=[];for(const p of ctx.llm.listProviders()){try{const models=await ctx.llm.listModels(p.id);data.push({provider:p.id,name:p.name,models})}catch(e){data.push({provider:p.id,name:p.name,models:[],error:e.message})}}break;}
+    case 'dsh_models':{data=[];for(const p of ctx.llm.listProviders()){try{const models=await ctx.llm.listModels(p.id);const enriched=await Promise.all(models.map(async m=>{try{const resolved=await ctx.llm.resolveModelInfo(p.id,m.id);return {...m,reasoningEfforts:resolved.reasoning?.efforts?.map(e=>e.id)||[]}}catch{return {...m,reasoningEfforts:[]}}}));data.push({provider:p.id,name:p.name,models:enriched})}catch(e){data.push({provider:p.id,name:p.name,models:[],error:e.message})}}break;}
     case 'dsh_prompt_context':{const assembly=await ctx.systemPrompt.assemble(assembleContextFor(a,new AbortController().signal));data={sections:assembly.sections.map(s=>({name:s.name,text:s.text})),contexts:assembly.contexts.map(s=>({name:s.name,text:s.text}))};break;}
     case 'dsh_health':data={engine:'DSH',persistent:true,model:a.options,skills:(await ctx.skills.list({cwd,scope:a})).map(s=>s.name),tools:ctx.tools.schemas(a).map(t=>t.name),commands:ctx.commands.list(a).map(c=>c.name)};break;
     case 'abort':if(q.discardInbox!==undefined&&typeof q.discardInbox!=='boolean')throw Error('Invalid discardInbox');a.cancel({kind:'user'},{keepInbox:q.discardInbox!==true});await a.whenIdle();data={};break;

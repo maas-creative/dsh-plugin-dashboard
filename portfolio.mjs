@@ -3,7 +3,7 @@ import {projectFamily} from './project-structure.mjs';
 export function portfolio(snapshot, liveSessions=[]) {
  const rows=snapshot.projects.filter(p=>p.kind!=='workspace'&&!p.parentProjectId&&!['archived','deleted'].includes(p.status)).map(p=>{
   const ids=projectFamily(p.id,snapshot.projects),members=snapshot.projects.filter(x=>ids.has(x.id)&&!['archived','deleted'].includes(x.status)),memberIds=new Set(members.map(x=>x.id));
-  const tasks=snapshot.tasks.filter(t=>memberIds.has(t.projectId)&&t.status!=='cancelled');
+  const tasks=snapshot.tasks.filter(t=>memberIds.has(t.projectId)&&!t.trashAt&&t.status!=='cancelled');
   const parents=new Set(tasks.map(t=>t.parentId).filter(Boolean)),leaves=tasks.filter(t=>!parents.has(t.id));
   const unfinished=leaves.filter(t=>t.status!=='done');
   const deadlines=snapshot.deadlines.filter(d=>memberIds.has(d.projectId)&&!d.received&&d.monitor!=='excluded');

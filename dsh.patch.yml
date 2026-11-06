@@ -1,8 +1,46 @@
 - id: sdk-jsonrpc-server
   disabled: true
+- id: compaction-basic
+  disabled: true
+- insert:
+    - id: scrum-compaction
+      name: ./node_modules/dsh-plugin-scrum/compaction-hooks.mjs
+      config:
+        thresholdRatio: 0.8
+        modelPolicies: !!js "JSON.parse(process.env.DSH_COMPACTION_MODEL_POLICIES || '[]')"
 - id: llm-pi-ai
   config:
     providers:
+      local-glm:
+        displayName: ローカルGLM
+        apiKeyEnv: DASHBOARD_GLM_KEY
+        api: openai-completions
+        baseURL: http://127.0.0.1:8000/v1
+        models:
+          - id: glm53-fast
+            input: [text]
+            contextWindow: 262144
+            maxTokens: 8192
+            reasoningEfforts:
+              low: low
+              high: high
+      local-deepseek:
+        displayName: ローカルDeepSeek
+        apiKeyEnv: DASHBOARD_DEEPSEEK_KEY
+        api: openai-completions
+        baseURL: http://100.66.64.103:8022/v1
+        # The local server may spend tens of seconds in cold prefill before
+        # yielding its first token. Keep the stream open long enough for
+        # compaction and daily planning instead of surfacing a transport error.
+        timeoutMs: 300000
+        streamIdleTimeoutMs: 180000
+        models:
+          - id: deepseek-mia-jp
+            input: [text]
+            contextWindow: 65536
+            maxTokens: 2048
+            reasoningEfforts:
+              low: low
       openai-codex:
         reasoning: low
         models:
@@ -12,6 +50,10 @@
             maxTokens: 32768
             reasoningEfforts:
               low: low
+- id: spill-local
+  config:
+    root: !!js dshHomePath('spill')
+    cleanupPeriodDays: 0
 - id: session-persistence-jsonl
   config:
     root: !!js dshHomePath('sessions')
@@ -30,9 +72,6 @@
     policy: never
 - id: permission
   disabled: true
-- id: tools
-  config:
-    mode: native
 - id: skill-filesystem
   config:
     includeDefaultRoots: true
@@ -56,6 +95,8 @@
     - id: antigravity-auth
       name: ./vendor/antigravity.mjs
 
+- id: tool-ask-user
+  disabled: true
 - insert:
     - id: dashboard-tool-ask-user
       name: '@deepseek-ai/dsh-tool-ask-user'

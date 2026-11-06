@@ -28,13 +28,13 @@ export function band(d,now=Date.now()){return deadlineState(d,now).band}
 export function projectIsActive(id,projects){const seen=new Set();while(id){const p=projects.find(p=>p.id===id);if(!p||p.status!=='active'||seen.has(id))return false;seen.add(id);id=p.parentProjectId}return true}
 export function priority(d,now=Date.now()){const b=band(d,now);return ['overdue','2h','6h','date-overdue','date-today'].includes(b)?0:['24h','unknown','zone-unknown'].includes(b)?1:b?2:3}
 export function actionability(t,tasks,projects){
- const active=x=>projectIsActive(x.projectId,projects);
+ const active=x=>!x.trashAt&&projectIsActive(x.projectId,projects);
  const open=x=>!['done','cancelled','reported'].includes(x.status);const blockers=[];
  const byId=new Map(tasks.map(x=>[x.id,x]));
  const depends=(x,id)=>{const pending=[...x.dependencies],seen=new Set();while(pending.length){const k=pending.pop();if(k===id)return true;if(seen.has(k))continue;seen.add(k);pending.push(...(byId.get(k)?.dependencies||[]))}return false};
  for(const x of tasks)if(active(x)&&open(x)&&x.due&&depends(x,t.id))blockers.push(x);
  blockers.sort((a,b)=>a.due-b.due);const inherited=blockers[0];
- const available=active(t)&&open(t)&&!tasks.some(c=>c.parentId===t.id&&open(c))&&t.dependencies.every(id=>tasks.find(x=>x.id===id)?.status==='done');
+ const available=active(t)&&open(t)&&!tasks.some(c=>c.parentId===t.id&&!c.trashAt&&open(c))&&t.dependencies.every(id=>tasks.find(x=>x.id===id)?.status==='done');
  const actor=!active(t)?'archived':t.waitReason==='external'?'external':!['自分','本人','Pi'].includes(t.owner)?'other':t.owner==='Pi'?'pi':'self';
  return {actionable:available&&['todo','doing'].includes(t.status)&&['self','pi'].includes(actor),actor,actionDue:Math.min(t.due||Infinity,inherited?.due||Infinity)||null,priorityReason:inherited&&(!t.due||inherited.due<t.due)?'前提待ち：'+inherited.title+'（'+new Date(inherited.due).toISOString()+ '）':''};
 }
@@ -62,7 +62,7 @@ export class Store {
  if(!projectColumns.has('kind'))this.db.exec("ALTER TABLE projects ADD COLUMN kind TEXT NOT NULL DEFAULT 'workspace'");
  if(!projectColumns.has('execution'))this.db.exec("ALTER TABLE projects ADD COLUMN execution TEXT NOT NULL DEFAULT 'manual'");
  const columns=new Set(this.all('PRAGMA table_info(tasks)').map(c=>c.name));
- for(const [name,type] of Object.entries({body:"TEXT NOT NULL DEFAULT ''",inputs:"TEXT NOT NULL DEFAULT ''",output:"TEXT NOT NULL DEFAULT ''",parentId:'TEXT REFERENCES tasks(id)',waitReason:"TEXT NOT NULL DEFAULT ''",waitingFor:"TEXT NOT NULL DEFAULT ''",checkAt:'INTEGER',planDay:"TEXT NOT NULL DEFAULT ''",completedAt:'INTEGER',completionCriteria:"TEXT NOT NULL DEFAULT ''",completionEvidence:"TEXT NOT NULL DEFAULT ''",canonicalTarget:"TEXT NOT NULL DEFAULT ''"}))if(!columns.has(name))this.db.exec(`ALTER TABLE tasks ADD COLUMN ${name} ${type}`);
+ for(const [name,type] of Object.entries({body:"TEXT NOT NULL DEFAULT ''",inputs:"TEXT NOT NULL DEFAULT ''",output:"TEXT NOT NULL DEFAULT ''",parentId:'TEXT REFERENCES tasks(id)',waitReason:"TEXT NOT NULL DEFAULT ''",waitingFor:"TEXT NOT NULL DEFAULT ''",checkAt:'INTEGER',planDay:"TEXT NOT NULL DEFAULT ''",completedAt:'INTEGER',archivedAt:'INTEGER',trashAt:'INTEGER',trashBatch:"TEXT NOT NULL DEFAULT ''",completionCriteria:"TEXT NOT NULL DEFAULT ''",completionEvidence:"TEXT NOT NULL DEFAULT ''",canonicalTarget:"TEXT NOT NULL DEFAULT ''"}))if(!columns.has(name))this.db.exec(`ALTER TABLE tasks ADD COLUMN ${name} ${type}`);
  this.db.exec(`CREATE TABLE IF NOT EXISTS task_runs(taskId TEXT NOT NULL REFERENCES tasks(id),runId TEXT NOT NULL REFERENCES runs(id),PRIMARY KEY(taskId,runId)); CREATE INDEX IF NOT EXISTS task_parent ON tasks(parentId); CREATE INDEX IF NOT EXISTS task_run ON task_runs(runId);`);
  if(this.get('PRAGMA user_version').user_version<2){this.run("UPDATE notifications SET snooze=? WHERE state='ack' AND snooze IS NULL",Date.now()+86400000);this.db.exec('PRAGMA user_version=2')}
  });
@@ -106,7 +106,7 @@ export class Store {
  const seen=new Set(),visiting=new Set();for(const key of graph.keys()){const pending=[[key,false]];while(pending.length){const [k,exit]=pending.pop();if(exit){visiting.delete(k);seen.add(k);continue}if(seen.has(k))continue;if(visiting.has(k))fail('親子・依存関係が循環しています');visiting.add(k);pending.push([k,true]);for(const d of graph.get(k)||[])pending.push([d,false])}}
  for(const t of tasks.values())if(t.status==='done'&&(t.id===id||t.dependencies.includes(id)||t.id===parentId||t.id===old?.parentId)){
  if(t.dependencies.some(d=>tasks.get(d)?.status!=='done'))fail('前提作業が未完了です。完了済みの後続作業は先に再開してください');
- if(graph.get(t.id).some(id=>{const c=tasks.get(id);return c.parentId===t.id&&!['done','cancelled'].includes(c.status)}))fail('子作業が未完了です。完了済みの親作業は先に再開してください');
+ if(graph.get(t.id).some(id=>{const c=tasks.get(id);return c.parentId===t.id&&!c.trashAt&&!['done','cancelled'].includes(c.status)}))fail('子作業が未完了です。完了済みの親作業は先に再開してください');
  }
  if(p.status==='reported'&&!completionEvidence)fail('完了報告の引用・根拠を記録してください');
  if(p.status==='done'&&(!completionCriteria||!completionEvidence))fail('完了には完了条件と確認した証拠が必要です');
@@ -117,15 +117,42 @@ export class Store {
  const due=p.local===undefined?(old?.due??null):p.local?localTime(p.local,p.zone||'Asia/Tokyo'):null;
  const planDay=text(p.planDay??old?.planDay??'','作業予定日',10,false);
  if(planDay&&(!/^\d{4}-\d{2}-\d{2}$/.test(planDay)||!Number.isFinite(Date.parse(planDay))||new Date(planDay).toISOString().slice(0,10)!==planDay))fail('作業予定日が無効です');
+ const archivedAt=p.status==='done'?(old?.status==='done'?old.archivedAt:Date.now()):null;
  const completedAt=p.status==='done'?(old?.status==='done'?old.completedAt:Date.now()):null;
  const values=[p.projectId,title,p.status,owner,next,due,JSON.stringify(deps),parentId,['waiting','review'].includes(p.status)?waitReason:'',['waiting','review'].includes(p.status)?waitingFor:'',['waiting','review'].includes(p.status)?checkAt:null,completionCriteria,completionEvidence,canonicalTarget,planDay,completedAt];
  if(old)this.run('UPDATE tasks SET projectId=?,title=?,status=?,owner=?,nextAction=?,due=?,dependencies=?,parentId=?,waitReason=?,waitingFor=?,checkAt=?,completionCriteria=?,completionEvidence=?,canonicalTarget=?,planDay=?,completedAt=?,version=version+1 WHERE id=?',...values,id);
  else this.run('INSERT INTO tasks(projectId,title,status,owner,nextAction,due,dependencies,parentId,waitReason,waitingFor,checkAt,completionCriteria,completionEvidence,canonicalTarget,planDay,completedAt,id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',...values,id);
  const body=p.body??old?.body??'';if(typeof body!=='string'||Buffer.byteLength(body)>200000)fail('作業本文を確認してください');
+ this.run('UPDATE tasks SET archivedAt=? WHERE id=?',archivedAt,id);
  this.run('UPDATE tasks SET body=?,inputs=?,output=? WHERE id=?',body,text(p.inputs??old?.inputs??'','入力資料',8000,false),text(p.output??old?.output??'','出力',2000,false),id);
  this.run('DELETE FROM task_runs WHERE taskId=?',id);for(const runId of runIds)this.run('INSERT INTO task_runs VALUES(?,?)',id,runId);
  return id;
  })}
+ taskLifecycle({id,version,action},now=Date.now()){return this.tx(()=>{
+ const t=this.get('SELECT * FROM tasks WHERE id=?',text(id,'作業ID',200));
+ if(!t)fail('作業がありません',404);
+ if(t.version!==version)fail('別の画面で変更されました。再読込してください',409);
+ if(action==='trash'){if(t.trashAt)return {id,action};const batch=randomUUID();this.run(`WITH RECURSIVE descendants(id) AS (SELECT id FROM tasks WHERE id=? UNION SELECT t.id FROM tasks t JOIN descendants d ON t.parentId=d.id WHERE t.trashAt IS NULL) UPDATE tasks SET trashAt=?,trashBatch=?,version=version+1 WHERE id IN (SELECT id FROM descendants) AND trashAt IS NULL`,id,now,batch);return {id,action}}
+ if(action==='untrash'){if(!t.trashAt)return {id,action};const parent=t.parentId&&this.get('SELECT status,trashAt,trashBatch FROM tasks WHERE id=?',t.parentId);if(parent&&parent.trashBatch!==t.trashBatch&&(parent.trashAt||parent.status==='done'))fail('親作業を先にゴミ箱から戻すか、完了状態を解除してください',409);if(!t.trashBatch)fail('復元する作業の記録が不正です',409);this.run('UPDATE tasks SET trashAt=NULL,trashBatch=?,version=version+1 WHERE trashBatch=?','',t.trashBatch);return {id,action}}
+ if(action==='complete'){if(t.trashAt)fail('ゴミ箱の作業は先に戻してください');if(t.status==='done')return {id,action};this.task({...t,dependencies:JSON.parse(t.dependencies),status:'done',completionCriteria:t.completionCriteria||'本人が完了と判断',completionEvidence:t.completionEvidence||'本人が画面から完了にしました'});return {id,action}}
+ if(t.status!=='done')fail('確認済みの完了作業だけをアーカイブできます');
+ if(action==='archive'){if(!t.archivedAt)this.run('UPDATE tasks SET archivedAt=?,version=version+1 WHERE id=?',now,id);}
+ else if(action==='restore')this.run('UPDATE tasks SET archivedAt=NULL,version=version+1 WHERE id=?',id);
+ else if(action==='delete'){
+  const reason=this.taskDeletionBlock(t,now);if(reason)fail(reason,409);
+  this.run('DELETE FROM task_reminders WHERE taskId=?',id);
+  this.run('DELETE FROM task_runs WHERE taskId=?',id);
+  this.run('DELETE FROM tasks WHERE id=?',id);
+ }else fail('操作が無効です');
+ return {id,action};
+ })}
+ taskDeletionBlock(t,now=Date.now()){
+ if(!t.archivedAt||now-t.archivedAt<30*86400000)return '削除はアーカイブから30日経過後にできます';
+ if(this.get('SELECT id FROM tasks WHERE parentId=? LIMIT 1',t.id))return '子作業が残っています。先に子作業を整理してください';
+ if(this.all('SELECT id,dependencies FROM tasks').some(x=>JSON.parse(x.dependencies).includes(t.id)))return '他の作業の前提として参照されています。先に関連を整理してください';
+ if(this.get("SELECT 1 FROM sqlite_master WHERE type='table' AND name='dashboard_execution_bindings'")&&this.get('SELECT executionId FROM dashboard_execution_bindings WHERE taskId=? LIMIT 1',t.id))return '実行記録から参照されています。記録を保護するため削除できません';
+ return '';
+ }
  binding(p){return this.tx(()=>{
  this.requireProject(p.projectId);const id=text(p.id,'セッション',200);if(!this.get('SELECT id FROM runs WHERE id=?',id))fail('セッションがありません',404);
  const previous=this.all('SELECT taskId FROM task_runs WHERE runId=?',id).map(r=>r.taskId);if(p.expectedBinding!==undefined&&p.expectedBinding!==this.bindingVersion(id))fail('関連付けが変更されています。再読込してください',409);const ids=p.taskIds===undefined?previous:p.taskIds;
@@ -144,10 +171,10 @@ export class Store {
  evaluate(now=Date.now()) {for(const d of this.all('SELECT * FROM deadlines WHERE received=0')){let b=band(d,now);if(!b){this.run("UPDATE notifications SET state='superseded' WHERE deadlineId=? AND state NOT IN ('resolved','superseded')",d.id);continue;}const settings=this.setting('notification',{enabled:false,quietStart:22,quietEnd:8});if(d.due&&d.due>now){const parts=new Intl.DateTimeFormat('en',{timeZone:'Asia/Tokyo',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(now);const hr=Number(parts.find(p=>p.type==='hour').value),min=Number(parts.find(p=>p.type==='minute').value);const hoursUntilEnd=(settings.quietEnd-settings.quietStart+24)%24;const lead=(settings.quietStart-hr+24)%24*60-min;if(lead>=0&&lead<=30&&d.due<now+(lead+hoursUntilEnd*60)*60000)b='before-quiet'}
  this.run("UPDATE notifications SET state='superseded' WHERE deadlineId=? AND version=? AND band!=? AND state IN ('pending','failed','uncertain','snoozed','sent','sending')",d.id,d.version,b);
  this.run("INSERT INTO notifications VALUES(?,?,?,?, 'pending',NULL,?) ON CONFLICT(deadlineId,version,band) DO UPDATE SET state='pending' WHERE state='superseded'",randomUUID(),d.id,d.version,b,now);this.run("UPDATE notifications SET state='pending',snooze=NULL WHERE deadlineId=? AND version=? AND band=? AND state='ack' AND snooze<=?",d.id,d.version,b,now)}
- for(const t of this.all("SELECT t.* FROM tasks t JOIN projects p ON p.id=t.projectId WHERE p.status='active' AND t.status IN ('waiting','review') AND t.checkAt<=?",now))this.run("INSERT INTO task_reminders(taskId,checkAt,state,nextAt) VALUES(?,?,'pending',?) ON CONFLICT(taskId) DO UPDATE SET checkAt=excluded.checkAt,state='pending',nextAt=excluded.nextAt WHERE task_reminders.checkAt!=excluded.checkAt",t.id,t.checkAt,now);
- this.run("DELETE FROM task_reminders WHERE NOT EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.projectId WHERE t.id=taskId AND t.checkAt=task_reminders.checkAt AND t.status IN ('waiting','review') AND p.status='active')");this.set('lastEvaluation',now)}
+ for(const t of this.all("SELECT t.* FROM tasks t JOIN projects p ON p.id=t.projectId WHERE p.status='active' AND t.trashAt IS NULL AND t.status IN ('waiting','review') AND t.checkAt<=?",now))this.run("INSERT INTO task_reminders(taskId,checkAt,state,nextAt) VALUES(?,?,'pending',?) ON CONFLICT(taskId) DO UPDATE SET checkAt=excluded.checkAt,state='pending',nextAt=excluded.nextAt WHERE task_reminders.checkAt!=excluded.checkAt",t.id,t.checkAt,now);
+ this.run("DELETE FROM task_reminders WHERE NOT EXISTS(SELECT 1 FROM tasks t JOIN projects p ON p.id=t.projectId WHERE t.id=taskId AND t.checkAt=task_reminders.checkAt AND t.trashAt IS NULL AND t.status IN ('waiting','review') AND p.status='active')");this.set('lastEvaluation',now)}
  notifyAction(p){if(p.id?.startsWith('task:')){const taskId=p.id.slice(5),r=this.get('SELECT * FROM task_reminders WHERE taskId=?',taskId);if(!r)fail('現在の再確認通知ではありません');if(!['ack','snooze'].includes(p.action))fail('操作が無効です');const until=p.action==='ack'?Date.now()+86400000:p.until;if(!Number.isFinite(until)||until<=Date.now()||until>Date.now()+86400000)fail('再確認は24時間以内です');this.run("UPDATE task_reminders SET state='snoozed',nextAt=? WHERE taskId=?",until,taskId);return}const n=this.get('SELECT * FROM notifications WHERE id=?',p.id);if(!n||['superseded','resolved'].includes(n.state))fail('現在の通知ではありません');if(p.action==='ack')this.run("UPDATE notifications SET state='ack',snooze=? WHERE id=?",Date.now()+86400000,p.id);else if(p.action==='snooze'){if(!Number.isFinite(p.until)||p.until<=Date.now()||p.until>Date.now()+86400000)fail('再通知は24時間以内を指定してください');this.run('INSERT INTO revision_snooze VALUES(?,?,?) ON CONFLICT(deadlineId,version) DO UPDATE SET untilTime=excluded.untilTime',n.deadlineId,n.version,p.until);this.run("UPDATE notifications SET state='snoozed',snooze=? WHERE id=?",p.until,p.id)}else fail('操作が無効です')}
- snapshot(now=Date.now()){const projects=this.all('SELECT * FROM projects ORDER BY created'),tasks=this.all('SELECT * FROM tasks').map(t=>({...t,dependencies:JSON.parse(t.dependencies)}));return {now,projects:projects.map(p=>({...p,canRun:projectIsActive(p.id,projects)})),taskRuns:this.all('SELECT * FROM task_runs'),tasks:tasks.map(t=>({...t,...actionability(t,tasks,projects)})),deadlines:this.all('SELECT * FROM deadlines').map(d=>({...d,priority:priority(d,now),...deadlineState(d,now)})).sort((a,b)=>a.priority-b.priority||(a.due??Infinity)-(b.due??Infinity)),runs:this.all('SELECT * FROM runs WHERE id IN (SELECT id FROM runs ORDER BY observed DESC LIMIT 300) OR id IN (SELECT runId FROM task_runs) ORDER BY observed DESC').map(r=>({...r,bindingVersion:this.bindingVersion(r.id)})),deliverables:this.all('SELECT * FROM deliverables'),submissions:this.all('SELECT * FROM submissions ORDER BY created DESC'),notifications:this.all("SELECT n.*,d.title FROM notifications n JOIN deadlines d ON d.id=n.deadlineId WHERE n.state NOT IN ('ack','superseded','resolved') ORDER BY CASE WHEN d.due IS NULL THEN 1 ELSE 0 END,d.due,n.created"),taskNotices:this.all("SELECT 'task:'||r.taskId id,t.title,t.projectId,r.state,r.nextAt FROM task_reminders r JOIN tasks t ON t.id=r.taskId JOIN projects p ON p.id=t.projectId WHERE t.checkAt=r.checkAt AND t.status IN ('waiting','review') AND p.status='active' AND (r.state!='snoozed' OR r.nextAt<=?)",now).filter(t=>projectIsActive(t.projectId,projects)),attempts:this.all('SELECT * FROM attempts ORDER BY id DESC LIMIT 20'),sources:this.setting('sources',{}),notification:this.setting('notification',{enabled:false,quietStart:22,quietEnd:8}),lastEvaluation:this.setting('lastEvaluation',null)}}
+ snapshot(now=Date.now()){const projects=this.all('SELECT * FROM projects ORDER BY created'),tasks=this.all('SELECT * FROM tasks').map(t=>({...t,dependencies:JSON.parse(t.dependencies)}));return {now,projects:projects.map(p=>({...p,canRun:projectIsActive(p.id,projects)})),taskRuns:this.all('SELECT * FROM task_runs'),tasks:tasks.map(t=>({...t,...actionability(t,tasks,projects)})),deadlines:this.all('SELECT * FROM deadlines').map(d=>({...d,priority:priority(d,now),...deadlineState(d,now)})).sort((a,b)=>a.priority-b.priority||(a.due??Infinity)-(b.due??Infinity)),runs:this.all('SELECT * FROM runs WHERE id IN (SELECT id FROM runs ORDER BY observed DESC LIMIT 300) OR id IN (SELECT runId FROM task_runs) ORDER BY observed DESC').map(r=>({...r,bindingVersion:this.bindingVersion(r.id)})),deliverables:this.all('SELECT * FROM deliverables'),submissions:this.all('SELECT * FROM submissions ORDER BY created DESC'),notifications:this.all("SELECT n.*,d.title FROM notifications n JOIN deadlines d ON d.id=n.deadlineId WHERE n.state NOT IN ('ack','superseded','resolved') ORDER BY CASE WHEN d.due IS NULL THEN 1 ELSE 0 END,d.due,n.created"),taskNotices:this.all("SELECT 'task:'||r.taskId id,t.title,t.projectId,r.state,r.nextAt FROM task_reminders r JOIN tasks t ON t.id=r.taskId JOIN projects p ON p.id=t.projectId WHERE t.checkAt=r.checkAt AND t.trashAt IS NULL AND t.status IN ('waiting','review') AND p.status='active' AND (r.state!='snoozed' OR r.nextAt<=?)",now).filter(t=>projectIsActive(t.projectId,projects)),attempts:this.all('SELECT * FROM attempts ORDER BY id DESC LIMIT 20'),sources:this.setting('sources',{}),notification:this.setting('notification',{enabled:false,quietStart:22,quietEnd:8}),lastEvaluation:this.setting('lastEvaluation',null)}}
  async backup(path){await backup(this.db,path);return path}
  close(){this.db.close()}
 }

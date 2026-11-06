@@ -54,3 +54,7 @@ The package includes the following components under their preserved MIT licenses
 Registry dependencies are separate packages installed through npm, not relicensed by Dashboard. Exact versions, URLs and integrity hashes are recorded in package-lock.json. Their license files remain in installed node_modules. No OMO/Sustainable Use License implementation is intended in the Dashboard public package; the publication audit records the source-boundary verification and its limits.
 
 Orca projection is shipped as plain JavaScript for npm-installed Node compatibility. Its original MIT TypeScript source is retained alongside the generated runtime, with `vendor/orca/rebuild.mjs` checking the native Node 24.19.0 transformation.
+
+## Arc UI Chat thread
+
+Official free Chat thread, foundation and motion tokens from https://uiarc.dev/. Copyright (c) 2026 Elia Kuratli, MIT. Source and full license: ui/arc/. Registry hashes and adaptations: ui/arc/provenance.json. React, React DOM, Motion and Lucide are bundled by scripts/build-arc-ui.mjs; their license notices are included under ui/licenses/.
